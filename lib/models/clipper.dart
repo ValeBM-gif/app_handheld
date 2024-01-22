@@ -16,7 +16,7 @@ class Clipper extends CustomClipper<Path> {
     final Matrix4 matrix4 = Matrix4.identity();
 
 
-    matrix4.scale(.99, .99);
+    matrix4.scale(.79, .79);
 
 
     return path.transform(matrix4.storage).shift(const Offset(0, 0));

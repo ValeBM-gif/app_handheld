@@ -358,9 +358,9 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
               },
               child: Container(
                 width: double.infinity,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: kPrimaryColor,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
                   ),
@@ -403,7 +403,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
             SizedBox(
               height: mostrarDetalleRack
                   ? screenSize.height * .2
-                  : screenSize.height * .35,
+                  : screenSize.height * .326,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ListView.separated(
@@ -559,7 +559,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                           setState(() {});
                         },
                         child: Container(
-                          width: 100,
+                          width: 85,
                           decoration: BoxDecoration(
                             color: vista == '1'
                                 ? kPrimaryColor
@@ -575,8 +575,8 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                   'Principal',
                                   style: vista == '1'
                                       ? greyTextStyle.copyWith(
-                                      color: Colors.white)
-                                      : greyTextStyle,
+                                      color: Colors.white, fontSize: 12)
+                                      : greyTextStyle.copyWith(fontSize: 12),
                                 )),
                           ),
                         ),
@@ -588,7 +588,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                           setState(() {});
                         },
                         child: Container(
-                          width: 100,
+                          width: 85,
                           decoration: BoxDecoration(
                             color: vista == '2'
                                 ? kPrimaryColor
@@ -604,8 +604,8 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                   'Subdivisión',
                                   style: vista == '2'
                                       ? greyTextStyle.copyWith(
-                                      color: Colors.white)
-                                      : greyTextStyle,
+                                      color: Colors.white, fontSize: 12)
+                                      : greyTextStyle.copyWith(fontSize: 12),
                                 )),
                           ),
                         ),
@@ -617,7 +617,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                           setState(() {});
                         },
                         child: Container(
-                          width: 100,
+                          width: 85,
                           decoration: BoxDecoration(
                             color: vista == '2.5'
                                 ? kPrimaryColor
@@ -633,8 +633,8 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                   'Secciones',
                                   style: vista == '2.5'
                                       ? greyTextStyle.copyWith(
-                                      color: Colors.white)
-                                      : greyTextStyle,
+                                      color: Colors.white, fontSize: 12)
+                                      : greyTextStyle.copyWith(fontSize: 12),
                                 )),
                           ),
                         ),
