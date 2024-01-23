@@ -1,18 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Product {
-  final String id;
-  final int stock;
-  final String name;
-  final String imageUrl;
-
-  Product({
-    required this.id,
-    required this.stock,
-    required this.name,
-    required this.imageUrl,
-  });
-}
+import '../constants.dart';
+import '../models/producto.dart';
 
 class ScanScreen extends StatefulWidget {
   @override
@@ -22,65 +11,44 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _controller = TextEditingController();
   FocusNode _focusNode = FocusNode();
-  List<Product> products = [
-    Product(
-      id: '812256024194',
-      stock: 20,
-      name: 'Body Mist',
-      imageUrl:
-          'https://culturaskin.com/cdn/shop/products/2598496_1200x1200.png?v=1670101288',
-    ),
-    Product(
-      id: '7501161502028',
-      stock: 35,
-      name: 'Leche León ',
-      imageUrl: 'https://lecheleon.com/img/pm2a.png',
-    ),
-    Product(
-      id: '7501008038208',
-      stock: 100,
-      name: 'Rice Krispies',
-      imageUrl:
-          'https://cdn.shopify.com/s/files/1/0566/4391/1854/products/7501008006450_a88581df-5e23-4ed8-a642-d818be73e6b5.png?v=1646619118',
-    ),
-    Product(
-      id: 'OS6348US',
-      stock: 1,
-      name: 'Handheld',
-      imageUrl:
-          'https://m.media-amazon.com/images/I/71y5mIfRfPL._AC_SL1500_.jpg',
-    ),
-    // Agrega más productos según sea necesario
-  ];
 
   String result = '';
-  Product? foundProduct;
+  Producto? foundProduct;
 
   @override
   void initState() {
     super.initState();
-    // Para imprimir lo que tiene el input en la consola
     _controller.addListener(() {
       print("Lo que tiene el input es: ${_controller.text}");
     });
 
-    // Hacer que el cursor ya este listo
     _focusNode.requestFocus();
   }
 
   void searchProduct() {
     String inputCode = _controller.text;
 
-    foundProduct = products.firstWhere(
-      (product) => product.id == inputCode,
-      orElse: () => Product(id: '', stock: 0, name: '', imageUrl: ''),
+    List<Producto> productos = mapaProductosBase['Productos']
+        .map<Producto>((json) => Producto.fromJson(json, 'seccion'))
+        .toList();
+
+    foundProduct = productos.firstWhere(
+      (product) => product.codigoBarras == inputCode,
+      orElse: () => Producto(
+        id: '',
+        cantidadStock: 0,
+        nombre: '',
+        pathFoto: '',
+        idSeccion: '',
+        codigoBarras: '',
+        locacion: '',
+      ),
     );
 
     if (foundProduct!.id.isNotEmpty) {
       setState(() {
         result =
-            'ID: ${foundProduct!.id}, Stock: ${foundProduct!.stock}, Nombre: ${foundProduct!.name}, Url de imagen: ${foundProduct!.imageUrl}';
-        // Limpiar el input
+            'ID: ${foundProduct!.id}, Stock: ${foundProduct!.cantidadStock}, Nombre: ${foundProduct!.nombre}, Url de imagen: ${foundProduct!.pathFoto}, Locacion: ${foundProduct!.locacion}';
         _controller.clear();
       });
     } else {
@@ -116,7 +84,7 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
           ),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: kPrimaryColor,
         title: const Text(
           'Scan Product',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
@@ -132,6 +100,24 @@ class _ScanScreenState extends State<ScanScreen> {
                 children: [
                   Expanded(
                     child: TextField(
+                      //controller: _controller,
+                      focusNode: _focusNode,
+                      onChanged: onTextChanged,
+                      autofocus: false,
+                      decoration: InputDecoration(
+                        hintText: 'Codigo de ubicacion',
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: kPrimaryColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
                       controller: _controller,
                       focusNode: _focusNode,
                       onChanged: onTextChanged,
@@ -139,7 +125,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       decoration: InputDecoration(
                         hintText: 'Codigo',
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue),
+                          borderSide: BorderSide(color: kPrimaryColor),
                         ),
                       ),
                     ),
@@ -151,7 +137,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       searchProduct();
                       _controller.clear();
                     },
-                    color: Colors.blue,
+                    color: kPrimaryColor,
                   ),
                 ],
               ),
@@ -162,8 +148,8 @@ class _ScanScreenState extends State<ScanScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Image.network(
-                        foundProduct!.imageUrl,
-                        width: 100, // Ajusta el tamaño según sea necesario
+                        foundProduct!.pathFoto,
+                        width: 100,
                         height: 100,
                         fit: BoxFit.cover,
                       ),
@@ -177,11 +163,15 @@ class _ScanScreenState extends State<ScanScreen> {
                               style: TextStyle(fontSize: 16),
                             ),
                             Text(
-                              'Stock: ${foundProduct!.stock}',
+                              'Stock: ${foundProduct!.cantidadStock}',
                               style: TextStyle(fontSize: 16),
                             ),
                             Text(
-                              'Nombre: ${foundProduct!.name}',
+                              'Nombre: ${foundProduct!.nombre}',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Text(
+                              'Locación: ${foundProduct!.locacion}',
                               style: TextStyle(fontSize: 16),
                             ),
                           ],

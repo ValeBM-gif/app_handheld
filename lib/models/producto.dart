@@ -4,66 +4,85 @@ class Producto {
   String pathFoto;
   List<int>? niveles;
   String? idSeccion;
-  String codigoBarras;
+  String? codigoBarras;
+  int? cantidadStock;
+  String? locacion;
 
-  Producto({
-    required this.id,
-    required this.nombre,
-    required this.pathFoto,
-    required this.niveles,
-    required this.idSeccion,
-    required this.codigoBarras,
-  });
+  Producto(
+      {required this.id,
+      required this.nombre,
+      required this.pathFoto,
+      this.niveles,
+      required this.idSeccion,
+      required this.codigoBarras,
+      required this.cantidadStock,
+      required this.locacion});
 
   factory Producto.fromJson(Map<String, dynamic> json, idDeSecciones) {
+    print("JSON recibido: $json");
     return Producto(
         id: json['Id'],
         nombre: json['Nombre'],
+        cantidadStock: json['cantidadStock'],
         pathFoto: json['ImgPath'],
         niveles: json['Nivel'],
         idSeccion: idDeSecciones,
-        codigoBarras: json['CodigoDeBarras']);
+        codigoBarras: json['CodigoDeBarras'],
+        locacion: json['Locacion']);
   }
-
 }
 
-
 Map<String, dynamic> mapaProductosBase = {
-  'Productos':[
+  'Productos': [
     {
       //PRODUCTO 1
       'Id': '1',
-      'Nombre': 'Producto 1',
-      'CodigoDeBarras': '111',
-      'ImgPath': 'assets/pila.png',
+      'Nombre': 'Body Mist by Ariana Grande',
+      'cantidadStock': 20,
+      'CodigoDeBarras': '812256024194',
+      'Locacion': '03-BE-03',
+      'ImgPath':
+          'https://culturaskin.com/cdn/shop/products/2598496_1200x1200.png?v=1670101288',
     },
     {
       //PRODUCTO 2
       'Id': '2',
-      'Nombre': 'Producto 2',
-      'CodigoDeBarras': '111',
-      'ImgPath': 'assets/pila2.png',
+      'Nombre': 'Nito',
+      'cantidadStock': 10,
+      'CodigoDeBarras': '7501030409854',
+      'Locacion': '03-AB-03',
+      'ImgPath':
+          'https://farmaciacalderon.com/cdn/shop/products/7501000112784_1200x1200.png?v=1605546431',
     },
     {
       //PRODUCTO 3
       'Id': '3',
       'Nombre': 'Producto 3',
-      'CodigoDeBarras': '111',
-      'ImgPath': 'assets/pila3.png',
+      'cantidadStock': 20,
+      'CodigoDeBarras': '1112',
+      'Locacion': '03-BE-03',
+      'ImgPath':
+          'https://culturaskin.com/cdn/shop/products/2598496_1200x1200.png?v=1670101288',
     },
     {
       //PRODUCTO 4
       'Id': '4',
       'Nombre': 'Producto 4',
-      'CodigoDeBarras': '111',
-      'ImgPath': 'assets/pila4.png',
+      'cantidadStock': 20,
+      'CodigoDeBarras': '1113',
+      'Locacion': '03-BE-03',
+      'ImgPath':
+          'https://culturaskin.com/cdn/shop/products/2598496_1200x1200.png?v=1670101288',
     },
     {
       //PRODUCTO 5
       'Id': '5',
       'Nombre': 'Producto 5',
-      'CodigoDeBarras': '111',
-      'ImgPath': 'assets/pila5.png',
+      'cantidadStock': 20,
+      'CodigoDeBarras': '1114',
+      'Locacion': '03-BE-03',
+      'ImgPath':
+          'https://culturaskin.com/cdn/shop/products/2598496_1200x1200.png?v=1670101288',
     },
   ]
 };
