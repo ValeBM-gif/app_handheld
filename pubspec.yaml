@@ -50,6 +50,8 @@ dependencies:
   http: ^1.1.0
   animate_do: ^2.1.0
   video_player: ^2.7.2
+  numberpicker: ^2.1.2
+  keyboard_visibility_pro: ^0.0.1
 
 dev_dependencies:
   flutter_test:

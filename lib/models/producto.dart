@@ -2,7 +2,7 @@ class Producto {
   String id;
   String nombre;
   String pathFoto;
-  List<int>? niveles;
+  int nivel;
   String? idSeccion;
   String? codigoBarras;
   int? cantidadStock;
@@ -12,7 +12,7 @@ class Producto {
       {required this.id,
       required this.nombre,
       required this.pathFoto,
-      this.niveles,
+      required this.nivel,
       required this.idSeccion,
       required this.codigoBarras,
       required this.cantidadStock,
@@ -25,11 +25,16 @@ class Producto {
         nombre: json['Nombre'],
         cantidadStock: json['cantidadStock'],
         pathFoto: json['ImgPath'],
-        niveles: json['Nivel'],
+        nivel: json['Nivel']??1,
         idSeccion: idDeSecciones,
         codigoBarras: json['CodigoDeBarras'],
         locacion: json['Locacion']);
   }
+}
+
+List<Producto> getProdcutosFromJson(json) {
+  var mapProductos = json['Productos'] as List;
+  return mapProductos.map((p) => Producto.fromJson(p, null)).toList();
 }
 
 Map<String, dynamic> mapaProductosBase = {

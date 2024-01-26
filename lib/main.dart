@@ -1,12 +1,18 @@
 import 'package:app_handheld/screens/home_screen.dart';
 import 'package:app_handheld/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:video_player/video_player.dart';
+import 'models/producto.dart';
+import 'models/rack.dart';
+import 'models/sucursal.dart';
 
 var api = "https://enersisuat.azurewebsites.net/api";
 late String user = 'vacio';
+
+List<Rack> racks = [];
+List<Sucursal> sucursales = [];
+List<Producto> productosGlobal = [];
 
 void main() => runApp(const MyApp());
 
@@ -34,6 +40,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void initState() {
+    racks = getRacksFromJson(mapaRacks);
     _controller = VideoPlayerController.asset('assets/LogoAnimation.mp4');
     _initializeVideoPlayerFuture = _controller.initialize();
 
@@ -51,6 +58,11 @@ class _SplashScreenState extends State<SplashScreen> {
     });
 
     super.initState();
+  }
+
+  List<Rack> getRacksFromJson(json) {
+    var mapaRacks = json['Racks'] as List;
+    return mapaRacks.map((r) => Rack.fromJson(r)).toList();
   }
 
   @override

@@ -1,12 +1,13 @@
+import 'dart:math';
+
+import 'package:app_handheld/screens/productos_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:xml/xml.dart';
-import 'package:custom_radio_grouped_button/custom_radio_grouped_button.dart';
 import '../constants.dart';
+import '../main.dart';
 import '../models/clipper.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
-import 'package:textfield_search/textfield_search.dart';
 import '../models/elemento_svg.dart';
 import '../models/producto.dart';
 import '../models/rack.dart';
@@ -19,139 +20,141 @@ class MapaAlmacenScreen extends StatefulWidget {
 }
 
 class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
-  List<ElementoDeSVG>? elementosDeSVG;
+  List<ElementoDeSVG>? elementosDeSVGPrincipal = [];
+  List<ElementoDeSVG>? elementosDeSVGDetalle = [];
 
-  ElementoDeSVG? currentSelectionPrincipal;
-  ElementoDeSVG? currentSelectionSubdivision;
-  ElementoDeSVG? currentSelectionSeccion;
+  ElementoDeSVG? rackResaltado;
+  List<ElementoDeSVG> bahiasResaltadas = [];
 
-  ElementoDeSVG? lastSelectionPrincipal;
-  ElementoDeSVG? lastSelectionSubdivision;
-  ElementoDeSVG? lastSelectionSeccion;
+  ElementoDeSVG? ultimoRackResaltado;
+  List<ElementoDeSVG> ultimasBahiasResaltadas = [];
 
   dynamic objetoSeleccionado;
-  Producto? productoSeleccionado;
+  Producto? productoABuscar;
 
-  bool mapaCargado = false;
-  bool mostrarSubidivisiones = false;
-  bool mostrarDetalleRack = false;
-  String vista = "1";
   PanelController panelController = PanelController();
   TextEditingController textEditingController = TextEditingController();
 
-  List<Producto> totalProductos = [];
+  List<Producto> productosRack = [];
   List<Producto> productosAMostrar = [];
-  List<Producto> prodcutosBase = [];
-  List<Producto> coincidencias = [];
-
-  List<Rack> racks=[];
 
   bool mostrarListaCoincidencias = false;
-
-  final key =
-  LabeledGlobalKey<CustomRadioButtonState<dynamic>>('debug label? idk');
+  bool mapaCargado = false;
+  bool mostrarDetalleBahia = false;
+  String vista = "2";
+  //vista 1: rack
+  //vista 2: bahía
 
   @override
   void initState() {
     super.initState();
-    racks=getRacksFromJson(mapaRacks);
-    totalProductos = getAllProducts(racks);
-    prodcutosBase = getProdcutosFromJson(mapaProductosBase);
-    loadSvgImage(svgImg: svg);
-    textEditingController.addListener(_printLatestValue);
+    productosRack = getAllProductsFromRacks(racks);
+    loadSvgImagePrincipal(svgImg: svg);
+    loadSvgImageDetalle(svgImg: svgRackDetalle);
+    print('tipo de ultim... ${ultimasBahiasResaltadas.runtimeType}');
   }
 
-  List<Rack>getRacksFromJson(json){
-    var mapaRacks = json['Racks'] as List;
-    return mapaRacks.map((r) => Rack.fromJson(r)).toList();
-  }
-
-  List<Producto>getProdcutosFromJson(json){
-    var mapProductos = json['Productos'] as List;
-    return mapProductos.map((p) => Producto.fromJson(p, null)).toList();
-  }
-
-  _printLatestValue() {
-    print("Textfield value: ${textEditingController.text}");
-  }
-
-  List<Producto> getAllProducts(List<Rack> allRacks) {
+  List<Producto> getAllProductsFromRacks(List<Rack> allRacks) {
     List<Producto> prods = [];
-    for (var r in allRacks) {
-      for (var s in r.subidivisiones) {
-        for (var se in s.secciones) {
-          if (se.productos != null) {
-            for (var p in se.productos!) {
-              prods.add(p);
-            }
-          }
+    List<String> locs = getLocacionesFromRacks(allRacks);
+    for (var p in productosGlobal) {
+      for (var l in locs) {
+        if (p.locacion == l) {
+          prods.add(p);
         }
       }
     }
     return prods;
   }
 
-  Future<void> loadSvgImage({required String svgImg}) async {
-    elementosDeSVG?.clear();
-    elementosDeSVG =await getElementSVG(svgImg);
-    for (var e in elementosDeSVG!) {
-      print('${e.nombre}');
+  List<String> getLocacionesFromRacks(List<Rack> allRacks) {
+    List<String> locs = [];
+    for (var r in allRacks) {
+      for (var b in r.bahias) {
+        locs.add(b.id);
+      }
     }
+    return locs;
+  }
+
+  Future<void> loadSvgImagePrincipal({required String svgImg}) async {
+    elementosDeSVGPrincipal?.clear();
+    elementosDeSVGPrincipal = await getElementSVG(svgImg);
     setState(() {
       mapaCargado = true;
     });
   }
 
-  Future<List<ElementoDeSVG>> getElementSVG(svgImg)async{
+  Future<void> loadSvgImageDetalle({required String svgImg}) async {
+    elementosDeSVGDetalle?.clear();
+    elementosDeSVGDetalle = await getElementSVG(svgImg);
+    setState(() {
+      mapaCargado = true;
+    });
+  }
+
+  Future<List<ElementoDeSVG>> getElementSVG(svgImg) async {
     List<ElementoDeSVG> elementosACargar = [];
     String generalString = await rootBundle.loadString(svgImg);
     XmlDocument doc = XmlDocument.parse(generalString);
     final paths = doc.findAllElements('path');
-    print('paths.length ${paths.length}, ${paths.runtimeType}');
+
+    print('paths.length ${paths.length}, runtime type: ${paths.runtimeType}');
     for (var path in paths) {
-      if (vista == "1") {
-        if (path.getAttribute('elementType').toString() != '2' &&
-            path.getAttribute('elementType').toString() != '2.5') {
+      if (path.getAttribute('tipo').toString() == '5' ||
+          path.getAttribute('tipo').toString() == '4') {
+        String partId = path.getAttribute('id').toString();
+        String partPath = path.getAttribute('d').toString();
+        String type = path.getAttribute('tipo').toString();
+        elementosACargar.add(
+            ElementoDeSVG(id: partId, partPath: partPath, tipoElemento: type));
+      }
+    }
+    for (var path in paths) {
+      if (path.getAttribute('tipo').toString() == '3') {
+        String partId = path.getAttribute('id').toString();
+        String partPath = path.getAttribute('d').toString();
+        String type = path.getAttribute('tipo').toString();
+        elementosACargar.add(
+            ElementoDeSVG(id: partId, partPath: partPath, tipoElemento: type));
+      }
+    }
+    for (var path in paths) {
+      if (vista == '2') {
+        if (path.getAttribute('tipo').toString() == '2') {
           String partId = path.getAttribute('id').toString();
           String partPath = path.getAttribute('d').toString();
-          String name = path.getAttribute('name').toString();
-          String type = path.getAttribute('elementType').toString();
+          String type = path.getAttribute('tipo').toString();
           elementosACargar.add(ElementoDeSVG(
-              id: partId,
-              partPath: partPath,
-              nombre: name,
-              tipoElemento: type));
+              id: partId, partPath: partPath, tipoElemento: type));
         }
-      } else if (vista == "2") {
-        if (path.getAttribute('elementType').toString() != '1' &&
-            path.getAttribute('elementType').toString() != '2.5') {
+      } else {
+        if (path.getAttribute('tipo').toString() == '1') {
           String partId = path.getAttribute('id').toString();
           String partPath = path.getAttribute('d').toString();
-          String name = path.getAttribute('name').toString();
-          String type = path.getAttribute('elementType').toString();
+          String type = path.getAttribute('tipo').toString();
+          String rack = path.getAttribute('rack').toString();
+          String aisle = path.getAttribute('pasillo').toString();
           elementosACargar.add(ElementoDeSVG(
               id: partId,
               partPath: partPath,
-              nombre: name,
+              pasilloId: aisle,
+              rackId: rack,
               tipoElemento: type));
-        }
-      } else if (vista == "2.5") {
-        if (path.getAttribute('elementType').toString() != '2' &&
-            path.getAttribute('elementType').toString() != '1') {
-          String partId = path.getAttribute('id').toString();
-          String partPath = path.getAttribute('d').toString();
-          String name = path.getAttribute('name').toString();
-          String type = path.getAttribute('elementType').toString();
-          String parent = path.getAttribute('parent').toString();
-          elementosACargar.add(ElementoDeSVG(
-              id: partId,
-              partPath: partPath,
-              nombre: name,
-              tipoElemento: type,
-              parent: parent ?? null));
         }
       }
     }
+    for (var path in paths) {
+      if (path.getAttribute('tipo').toString() == '6') {
+        String partId = path.getAttribute('id').toString();
+        String partPath = path.getAttribute('d').toString();
+        String type = path.getAttribute('tipo').toString();
+        elementosACargar.add(
+          ElementoDeSVG(id: partId, partPath: partPath, tipoElemento: type),
+        );
+      }
+    }
+
     print('elementosACargar.length ${elementosACargar.length}');
     return elementosACargar;
   }
@@ -160,15 +163,17 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
     required Clipper clipper,
     required Color color,
     required ElementoDeSVG? element,
+    required bool abrirPanel,
+    required bool tapEnDetalle,
   }) {
     return ClipPath(
       clipper: clipper,
       child: GestureDetector(
         onTap: () => element != null
-            ? onElementSelected(element, true)
+            ? onElementSelected(element, abrirPanel, tapEnDetalle)
             : () {
-          print('element nulo');
-        },
+                print('element nulo');
+              },
         child: Container(
           color: color,
         ),
@@ -176,66 +181,127 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
     );
   }
 
-  void onElementSelected(ElementoDeSVG svgElement, bool vieneDeTap) {
-    if (svgElement.tipoElemento != '3') {
-      if (vista == '1') {
-        if (currentSelectionPrincipal == null ||
-            svgElement.id != lastSelectionPrincipal?.id) {
+  Future<void> onElementSelected(ElementoDeSVG svgElement,
+      bool tapEnMapaPrincipal, bool tapEnMapaDetalle) async {
+    if (!mostrarDetalleBahia) {
+      for (var e in elementosDeSVGPrincipal!) {
+        e.resaltado = false;
+        objetoSeleccionado = null;
+        // rackResaltado=null;
+        // bahiasResaltadas=[];
+      }
+      if (svgElement.tipoElemento == '2') {
+        if (rackResaltado == null || svgElement.id != ultimoRackResaltado?.id) {
           objetoSeleccionado =
               racks.firstWhere((rack) => rack.id == svgElement.id);
-
-          currentSelectionPrincipal =
-              elementosDeSVG?.firstWhere((c) => c.id == svgElement.id);
-          lastSelectionPrincipal = currentSelectionPrincipal;
+          elementosDeSVGPrincipal
+              ?.firstWhere((element) => element.id == svgElement.id)
+              .resaltado = true;
+          rackResaltado =
+              elementosDeSVGPrincipal?.firstWhere((c) => c.id == svgElement.id);
+          ultimoRackResaltado = rackResaltado;
         } else {
           objetoSeleccionado = null;
-          currentSelectionPrincipal = null;
+          elementosDeSVGPrincipal
+              ?.firstWhere((element) => element.id == svgElement.id)
+              .resaltado = false;
+          rackResaltado = null;
         }
-      } else if (vista == "2") {
-        if (currentSelectionSubdivision == null ||
-            svgElement.id != lastSelectionSubdivision?.id) {
-          for (var rack in racks) {
-            for (var subdivision in rack.subidivisiones) {
-              if (subdivision.id == svgElement.id) {
-                objetoSeleccionado = subdivision;
+      } else if (svgElement.tipoElemento == '1') {
+        if (ultimasBahiasResaltadas.length <= 1) {
+          if (ultimasBahiasResaltadas.length == 1) {
+            if (ultimasBahiasResaltadas[0].id == svgElement.id) {
+              objetoSeleccionado = null;
+              elementosDeSVGPrincipal
+                  ?.firstWhere((element) => element.id == svgElement.id)
+                  .resaltado = false;
+              bahiasResaltadas.clear();
+            } else {
+              bahiasResaltadas.clear();
+              for (var rack in racks) {
+                for (var bahia in rack.bahias) {
+                  if (bahia.id == svgElement.id) {
+                    objetoSeleccionado = bahia;
+                    elementosDeSVGPrincipal
+                        ?.firstWhere((element) => element.id == svgElement.id)
+                        .resaltado = true;
+                    bahiasResaltadas.add(elementosDeSVGPrincipal!
+                        .firstWhere((element) => element.id == svgElement.id));
+                    ultimasBahiasResaltadas = bahiasResaltadas;
+                  }
+                }
               }
             }
-          }
-
-          currentSelectionSubdivision =
-              elementosDeSVG?.firstWhere((c) => c.id == svgElement.id);
-          lastSelectionSubdivision = currentSelectionSubdivision;
-        } else {
-          objetoSeleccionado = null;
-          currentSelectionSubdivision = null;
-        }
-      } else {
-        if (currentSelectionSeccion == null ||
-            svgElement.id != lastSelectionSeccion?.id) {
-          for (var rack in racks) {
-            for (var subdivision in rack.subidivisiones) {
-              for (var seccion in subdivision.secciones) {
-                if (seccion.id == svgElement.id) {
-                  objetoSeleccionado = seccion;
+          } else {
+            bahiasResaltadas.clear();
+            for (var rack in racks) {
+              for (var bahia in rack.bahias) {
+                if (bahia.id == svgElement.id) {
+                  objetoSeleccionado = bahia;
+                  elementosDeSVGPrincipal
+                      ?.firstWhere((element) => element.id == svgElement.id)
+                      .resaltado = true;
+                  bahiasResaltadas.add(elementosDeSVGPrincipal!
+                      .firstWhere((element) => element.id == svgElement.id));
+                  ultimasBahiasResaltadas = bahiasResaltadas;
                 }
               }
             }
           }
-
-          currentSelectionSeccion =
-              elementosDeSVG?.firstWhere((c) => c.id == svgElement.id);
-          lastSelectionSeccion = currentSelectionSeccion;
-        } else {
-          objetoSeleccionado = null;
-          currentSelectionSeccion = null;
+        } else if (ultimasBahiasResaltadas.length > 1) {
+          bahiasResaltadas.clear();
+          for (var rack in racks) {
+            for (var bahia in rack.bahias) {
+              if (bahia.id == svgElement.id) {
+                objetoSeleccionado = bahia;
+                elementosDeSVGPrincipal
+                    ?.firstWhere((element) => element.id == svgElement.id)
+                    .resaltado = true;
+                bahiasResaltadas.add(elementosDeSVGPrincipal!
+                    .firstWhere((element) => element.id == svgElement.id));
+              }
+            }
+          }
+          ultimasBahiasResaltadas = bahiasResaltadas;
         }
+      } else if (svgElement.tipoElemento == '3') {
+        bahiasResaltadas.clear();
+        vista = '1';
+        await loadSvgImagePrincipal(svgImg: svg);
+        for (var rack in racks) {
+          for (var bahia in rack.bahias) {
+            if (bahia.pasilloId == svgElement.id) {
+              print('coincide');
+              objetoSeleccionado = null;
+              print(elementosDeSVGPrincipal?.length);
+              elementosDeSVGPrincipal
+                  ?.firstWhere((element) => element.id == bahia.id)
+                  .resaltado = true;
+              bahiasResaltadas.add(elementosDeSVGPrincipal!
+                  .firstWhere((element) => element.id == bahia.id));
+            } else {
+              print('no coincide');
+            }
+          }
+        }
+        ultimasBahiasResaltadas = bahiasResaltadas;
       }
-
       if (objetoSeleccionado != null) {
         getProductosAMostrar(objetoSeleccionado);
-        if(vieneDeTap){
+        if (tapEnMapaPrincipal) {
           panelController.open();
         }
+      }
+    } else {
+      if (!tapEnMapaDetalle) {
+        for (var e in elementosDeSVGDetalle!) {
+          e.resaltado = false;
+          print(e.id);
+        }
+        print('print ${svgElement.id}');
+        elementosDeSVGDetalle
+            ?.firstWhere((element) => element.id == svgElement.id)
+            .resaltado = true;
       }
     }
 
@@ -244,47 +310,24 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
 
   void getProductosAMostrar(dynamic objeto) {
     productosAMostrar.clear();
-    if (vista == '1') {
-      for (var r in racks) {
-        if (r.id == objeto.id) {
-          for (var s in r.subidivisiones) {
-            for (var se in s.secciones) {
-              if (se.productos != null) {
-                for (var p in se.productos!) {
-                  productosAMostrar.add(p);
-                }
+
+    for (var p in productosRack) {
+      if (vista == '2') {
+        for (var r in racks) {
+          if (r.id == objeto.id) {
+            for (var b in r.bahias) {
+              if (b.id == p.locacion) {
+                productosAMostrar.add(p);
               }
             }
           }
         }
-      }
-    } else if (vista == '2') {
-      for (var r in racks) {
-        if (r.id == objeto.parent) {
-          for (var s in r.subidivisiones) {
-            if (s.id == objeto.id) {
-              for (var se in s.secciones) {
-                if (se.productos != null) {
-                  for (var p in se.productos!) {
-                    productosAMostrar.add(p);
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    } else if (vista == '2.5') {
-      for (var r in racks) {
-        for (var s in r.subidivisiones) {
-          if (s.id == objeto.parent) {
-            for (var se in s.secciones) {
-              if (se.id == objeto.id) {
-                if (se.productos != null) {
-                  for (var p in se.productos!) {
-                    productosAMostrar.add(p);
-                  }
-                }
+      } else {
+        for (var r in racks) {
+          for (var b in r.bahias) {
+            if (b.id == objeto.id) {
+              if (b.id == p.locacion) {
+                productosAMostrar.add(p);
               }
             }
           }
@@ -293,16 +336,21 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
     }
   }
 
-  void getCoincidencias() async {
-    coincidencias.clear();
+  List<Producto> getCoincidencias() {
+    List<Producto> coincidencias = [];
     String inputText = textEditingController.text;
-    for (var p in totalProductos) {
+    print('productos en el rack ${productosRack.length}');
+    for (var p in productosRack) {
       if (p.nombre.toLowerCase().contains(
-        inputText.toLowerCase(),
-      )) {
+            inputText.toLowerCase(),
+          )) {
         coincidencias.add(p);
       }
     }
+    if (coincidencias.isEmpty) {
+      mostrarListaCoincidencias = false;
+    }
+    return coincidencias;
   }
 
   @override
@@ -336,365 +384,422 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
       ),
       body: mapaCargado
           ? SlidingUpPanel(
-        backdropOpacity: 0.28,
-        backdropEnabled: true,
-        backdropTapClosesPanel: true,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24.0),
-          topRight: Radius.circular(24.0),
-        ),
-        snapPoint: .8,
-        maxHeight: screenSize.height * .4,
-        minHeight: screenSize.height * 0,
-        controller: panelController,
-        color: Theme.of(context).canvasColor,
-        panel: Column(
-          children: [
-            GestureDetector(
-              onTap: () {
-                mostrarDetalleRack = !mostrarDetalleRack;
-                loadSvgImage(svgImg: svgRackDetalle);
-                setState(() {});
+              onPanelClosed: () {
+                mostrarDetalleBahia = false;
               },
-              child: Container(
-                width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: kPrimaryColor,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Center(
-                    child: Text(
-                      'Ver más',
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    ),
-                  ),
-                ),
+              backdropOpacity: 0.28,
+              backdropEnabled: true,
+              backdropTapClosesPanel: true,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(24.0),
+                topRight: Radius.circular(24.0),
               ),
-            ),
-            mostrarDetalleRack
-                ? SizedBox(
-              height: screenSize.height * .2,
-              width: screenSize.width * .8,
-              child: InteractiveViewer(
-                maxScale: 2,
-                minScale: .1,
-                child: Stack(
-                  children: [
-                    _getClippedImage(
-                      clipper: Clipper(
-                        svgPath: svgRackDetalle,
-                      ),
-                      color: kPrimaryColor,
-                      element: null,
-                    ),
-                  ],
-                ),
-              ),
-            )
-                : const SizedBox(),
-            SizedBox(
-              height: mostrarDetalleRack
-                  ? screenSize.height * .2
-                  : screenSize.height * .326,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: ListView.separated(
-                    separatorBuilder: (context, index) {
-                      return const Divider();
+              snapPoint: .8,
+              maxHeight: screenSize.height * .4,
+              minHeight: screenSize.height * 0,
+              controller: panelController,
+              color: Theme.of(context).canvasColor,
+              panel: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      // mostrarDetalleBahia = !mostrarDetalleBahia;
+                      // loadSvgImage(svgImg: svgRackDetalle);
+                      // setState(() {});
                     },
-                    itemCount: productosAMostrar.length,
-                    itemBuilder: (context, index) {
-                      Producto producto = productosAMostrar[index];
-                      return Padding(
-                        padding:
-                        const EdgeInsets.symmetric(horizontal: 18.0),
-                        child: ListTile(
-                          key: UniqueKey(),
-                          leading: Image.asset(
-                            producto.pathFoto,
-                            height: 40,
-                            width: 40,
-                          ),
-                          title: Text(
-                            producto.nombre,
-                            style: greyTextStyle,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: const BoxDecoration(
+                        color: kPrimaryColor,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Center(
+                          child: Text(
+                            '',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 5),
                           ),
                         ),
-                      );
-                    }),
-              ),
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            Column(
-              children: [
-                const SizedBox(
-                  height: 6,
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextFormField(
-                    cursorColor: kPrimaryColor,
-                    decoration: InputDecoration(
-                      floatingLabelStyle:
-                      MaterialStateTextStyle.resolveWith(
-                            (Set<MaterialState> states) {
-                          return greyTextStyle;
-                        },
-                      ),
-                      contentPadding:
-                      const EdgeInsets.only(left: 9, right: 9),
-                      labelText: 'Búsqueda de productos',
-                      labelStyle: const TextStyle(color: Colors.black26),
-                      filled: true,
-                      fillColor: Colors.grey.shade300.withAlpha(150),
-                      border: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(11),
-                        ),
-                        borderSide: BorderSide.none,
                       ),
                     ),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.black,
-                      //fontWeight: FontWeight.bold,
-                    ),
-                    controller: textEditingController,
-                    onChanged: (val) {
-                      textEditingController.text = val;
-                      if (val == null || val == '') {
-                        mostrarListaCoincidencias = false;
-                      } else {
-                        getCoincidencias();
-                        mostrarListaCoincidencias = true;
-                      }
-                      setState(() {});
-                    },
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 18.0),
-                  child: Text(
-                    'Sección: ${vista == '1' ? currentSelectionPrincipal?.nombre : vista == "2" ? currentSelectionSubdivision?.nombre : currentSelectionSeccion?.nombre}',
-                    style: greyTextStyle.copyWith(
-                        fontWeight: FontWeight.w900, fontSize: 16),
-                  ),
-                ),
-                Center(
-                  child: SizedBox(
-                    height: screenSize.height * .5,
-                    width: screenSize.width * .8,
-                    child: InteractiveViewer(
-                      maxScale: 2,
-                      minScale: .1,
-                      child: Stack(
-                        children: [
-                          for (var elemento in elementosDeSVG!)
-                            _getClippedImage(
-                              clipper: Clipper(
-                                svgPath: elemento.partPath,
+                  vista == '1'
+                      ? GestureDetector(
+                          onTap: () {
+                            mostrarDetalleBahia = !mostrarDetalleBahia;
+                            setState(() {});
+                          },
+                          child: Icon(!mostrarDetalleBahia
+                              ? Icons.arrow_drop_down
+                              : Icons.arrow_drop_up),
+                        )
+                      : const SizedBox(),
+                  mostrarDetalleBahia
+                      ? Center(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                                left: screenSize.width * .365,
+                                right: screenSize.width * .365,
+                                top: screenSize.height * .01),
+                            child: Container(
+                              //color: Colors.pink,
+                              height: screenSize.height * .134,
+                              width: screenSize.width * .8,
+                              child: InteractiveViewer(
+                                maxScale: 2,
+                                minScale: .1,
+                                child: Stack(
+                                  children: [
+                                    for (var elemento in elementosDeSVGDetalle!)
+                                      _getClippedImage(
+                                          clipper: Clipper(
+                                            scale: .35,
+                                            svgPath: elemento.partPath,
+                                          ),
+                                          color: kPrimaryColor.withOpacity(
+                                              elemento.resaltado ? .5 : 1),
+                                          element: elemento,
+                                          abrirPanel: false,
+                                          tapEnDetalle: true),
+                                  ],
+                                ),
                               ),
-                              color: vista == '1'
-                                  ? kPrimaryColor
-                              //Color(int.parse('FF${country.color}', radix: 16))
-                                  .withOpacity(
-                                  currentSelectionPrincipal ==
-                                      null
-                                      ? 1.0
-                                      : currentSelectionPrincipal
-                                      ?.id ==
-                                      elemento.id
-                                      ? 0.5
-                                      : 1)
-                                  : vista == '2'
-                                  ? kPrimaryColor
-                              //Color(int.parse('FF${country.color}', radix: 16))
-                                  .withOpacity(
-                                  currentSelectionSubdivision ==
-                                      null
-                                      ? 1.0
-                                      : currentSelectionSubdivision
-                                      ?.id ==
-                                      elemento.id
-                                      ? 0.5
-                                      : 1)
-                                  : kPrimaryColor
-                              //Color(int.parse('FF${country.color}', radix: 16))
-                                  .withOpacity(
-                                  currentSelectionSeccion ==
-                                      null
-                                      ? 1.0
-                                      : currentSelectionSeccion
-                                      ?.id ==
-                                      elemento.id
-                                      ? 0.5
-                                      : 1),
-                              element: elemento,
                             ),
-                        ],
-                      ),
+                          ),
+                        )
+                      : const SizedBox(),
+                  SizedBox(
+                    height: mostrarDetalleBahia
+                        ? screenSize.height * .195
+                        : screenSize.height * .3305,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: ListView.separated(
+                          separatorBuilder: (context, index) {
+                            return const Divider();
+                          },
+                          itemCount: productosAMostrar.length,
+                          itemBuilder: (context, index) {
+                            Producto producto = productosAMostrar[index];
+                            return Container(
+                              color: Colors.transparent,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 18.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    mostrarDetalleBahia = true;
+                                    for (var e in elementosDeSVGDetalle!) {
+                                      if (e.id == '0${producto.nivel}') {
+                                        onElementSelected(e, false, false);
+                                      }
+                                    }
+                                    setState(() {});
+                                  },
+                                  child: ListTile(
+                                    key: UniqueKey(),
+                                    leading: Image.network(
+                                      producto.pathFoto,
+                                      height: 40,
+                                      width: 40,
+                                    ),
+                                    title: Text(
+                                      producto.nombre,
+                                      style: greyTextStyle,
+                                    ),
+                                    subtitle: Text(
+                                      'Locación: ${producto.locacion ?? 'no asignada'}',
+                                      style:
+                                          greyTextStyle.copyWith(fontSize: 12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
                     ),
                   ),
-                ),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                ],
+              ),
+              body: Stack(
+                children: [
+                  Column(
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          vista = '1';
-                          loadSvgImage(svgImg: svg);
-                          setState(() {});
-                        },
-                        child: Container(
-                          width: 85,
-                          decoration: BoxDecoration(
-                            color: vista == '1'
-                                ? kPrimaryColor
-                                : Colors.transparent,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                                child: Text(
-                                  'Principal',
-                                  style: vista == '1'
-                                      ? greyTextStyle.copyWith(
-                                      color: Colors.white, fontSize: 12)
-                                      : greyTextStyle.copyWith(fontSize: 12),
-                                )),
-                          ),
-                        ),
+                      const SizedBox(
+                        height: 6,
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          vista = '2';
-                          loadSvgImage(svgImg: svg);
-                          setState(() {});
-                        },
-                        child: Container(
-                          width: 85,
-                          decoration: BoxDecoration(
-                            color: vista == '2'
-                                ? kPrimaryColor
-                                : Colors.transparent,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextFormField(
+                          cursorColor: kPrimaryColor,
+                          decoration: InputDecoration(
+                            suffix: GestureDetector(
+                              onTap: (){
+                                textEditingController.text='';
+                                mostrarListaCoincidencias=false;
+                                setState(() {});
+                                },
+                                child: const Icon(
+                              Icons.close_sharp,
+                              color: Colors.grey,
+                            ),),
+                            floatingLabelStyle:
+                                MaterialStateTextStyle.resolveWith(
+                              (Set<MaterialState> states) {
+                                return greyTextStyle;
+                              },
+                            ),
+                            contentPadding:
+                                const EdgeInsets.only(left: 9, right: 9),
+                            labelText: 'Búsqueda de productos',
+                            labelStyle: const TextStyle(color: Colors.black26),
+                            filled: true,
+                            fillColor: Colors.grey.shade300.withAlpha(150),
+                            border: const OutlineInputBorder(
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(11),
+                              ),
+                              borderSide: BorderSide.none,
                             ),
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                                child: Text(
-                                  'Subdivisión',
-                                  style: vista == '2'
-                                      ? greyTextStyle.copyWith(
-                                      color: Colors.white, fontSize: 12)
-                                      : greyTextStyle.copyWith(fontSize: 12),
-                                )),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                            //fontWeight: FontWeight.bold,
                           ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          vista = '2.5';
-                          loadSvgImage(svgImg: svg);
-                          setState(() {});
-                        },
-                        child: Container(
-                          width: 85,
-                          decoration: BoxDecoration(
-                            color: vista == '2.5'
-                                ? kPrimaryColor
-                                : Colors.transparent,
-                            borderRadius: const BorderRadius.all(
-                              Radius.circular(12),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Center(
-                                child: Text(
-                                  'Secciones',
-                                  style: vista == '2.5'
-                                      ? greyTextStyle.copyWith(
-                                      color: Colors.white, fontSize: 12)
-                                      : greyTextStyle.copyWith(fontSize: 12),
-                                )),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),),
-              ],
-            ),
-            mostrarListaCoincidencias
-                ? Padding(
-              padding: const EdgeInsets.only(
-                  left: 10.0, right: 10, top: 63),
-              child: Container(
-                height: 100,
-                color: Colors.grey.shade200,
-                child: ListView.builder(
-                    itemCount: coincidencias.length,
-                    itemBuilder: (context, index) {
-                      var coincidencia = coincidencias[index];
-                      return GestureDetector(
-                        onTap: ()async {
-                          textEditingController.text=coincidencia.nombre;
-                          mostrarListaCoincidencias = false;
-                          productoSeleccionado = coincidencia;
-                          vista = '2.5';
-                          loadSvgImage(svgImg: svg);
-                          List<ElementoDeSVG> elementos =await getElementSVG(svg);
-                          print('tut');
-                          print(elementos?.length);
-                          for (var elemento in elementos!){
-                            if(elemento.id==productoSeleccionado!.idSeccion){
-                              print('lo encontró');
-                              onElementSelected(elemento, false);
+                          controller: textEditingController,
+                          onChanged: (val) {
+                            textEditingController.text = val;
+                            if (val == null || val == '') {
+                              mostrarListaCoincidencias = false;
+                            } else {
+                              mostrarListaCoincidencias = true;
                             }
-                          }
-                          setState(() {});
-                        },
-                        child: ListTile(
-                          key: UniqueKey(),
-                          leading: Image.asset(
-                            coincidencia.pathFoto,
-                            height: 40,
-                            width: 40,
-                          ),
-                          title: Text(
-                            coincidencia.nombre,
-                            style: greyTextStyle,
+                            setState(() {});
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 18.0),
+                        child: Text(
+                          'Sección: ${objetoSeleccionado != null ? objetoSeleccionado.id : ''}',
+                          style: greyTextStyle.copyWith(
+                              fontWeight: FontWeight.w900, fontSize: 16),
+                        ),
+                      ),
+                      Center(
+                        child: SizedBox(
+                          height: screenSize.height * .5,
+                          width: screenSize.width * .8,
+                          child: InteractiveViewer(
+                            maxScale: 2,
+                            minScale: .1,
+                            child: Stack(
+                              children: [
+                                for (var elemento in elementosDeSVGPrincipal!)
+                                  _getClippedImage(
+                                    clipper: Clipper(
+                                      scale: .79,
+                                      svgPath: elemento.partPath,
+                                    ),
+                                    color: elemento.tipoElemento == '3'
+                                        ? Theme.of(context)
+                                            .scaffoldBackgroundColor
+                                        : kPrimaryColor.withOpacity(
+                                            elemento.resaltado ? .5 : 1),
+                                    element: elemento,
+                                    abrirPanel: true,
+                                    tapEnDetalle: false,
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
-                      );
-                    }),
+                      ),
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                vista = '2';
+                                loadSvgImagePrincipal(svgImg: svg);
+                                setState(() {});
+                              },
+                              child: Container(
+                                width: 85,
+                                decoration: BoxDecoration(
+                                  color: vista == '2'
+                                      ? kPrimaryColor
+                                      : Colors.transparent,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Center(
+                                      child: Text(
+                                    'Racks',
+                                    style: vista == '2'
+                                        ? greyTextStyle.copyWith(
+                                            color: Colors.white, fontSize: 12)
+                                        : greyTextStyle.copyWith(fontSize: 12),
+                                  )),
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                vista = '1';
+                                loadSvgImagePrincipal(svgImg: svg);
+                                setState(() {});
+                              },
+                              child: Container(
+                                width: 85,
+                                decoration: BoxDecoration(
+                                  color: vista == '1'
+                                      ? kPrimaryColor
+                                      : Colors.transparent,
+                                  borderRadius: const BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Center(
+                                      child: Text(
+                                    'Bahías',
+                                    style: vista == '1'
+                                        ? greyTextStyle.copyWith(
+                                            color: Colors.white, fontSize: 12)
+                                        : greyTextStyle.copyWith(fontSize: 12),
+                                  )),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                      // Padding(
+                      //   padding: const EdgeInsets.only(top: 38.0),
+                      //   child: GestureDetector(
+                      //     onTap: () async {
+                      //       await Navigator.push(
+                      //         context,
+                      //         MaterialPageRoute(builder: (context) {
+                      //           return ProductosScreen(
+                      //             productos: prodcutosJson,
+                      //           );
+                      //         }),
+                      //       );
+                      //       productosRack = getAllProductsFromRacks(racks);
+                      //     },
+                      //     child: Container(
+                      //       width: 50,
+                      //       decoration: BoxDecoration(
+                      //         color: Colors.transparent,
+                      //         border:
+                      //             Border.all(color: kPrimaryColor, width: 3),
+                      //         borderRadius: const BorderRadius.all(
+                      //           Radius.circular(12),
+                      //         ),
+                      //       ),
+                      //       child: const Padding(
+                      //         padding: EdgeInsets.all(8.0),
+                      //         child: Center(
+                      //           child: Icon(
+                      //             Icons.battery_6_bar,
+                      //             color: kPrimaryColor,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ),
+                      //   ),
+                      // ),
+                    ],
+                  ),
+                  mostrarListaCoincidencias
+                      ? Padding(
+                          padding: EdgeInsets.only(
+                              left: 0.0,
+                              right: 0,
+                              top: screenSize.height * .08),
+                          child: Container(
+                            //height: 100,
+                            color: Theme.of(context).scaffoldBackgroundColor,
+                            child: ListView.builder(
+                                itemCount: getCoincidencias().isNotEmpty
+                                    ? getCoincidencias().length
+                                    : 1,
+                                itemBuilder: (context, index) {
+                                  var coincidencia;
+                                  if (getCoincidencias().isNotEmpty) {
+                                    coincidencia = getCoincidencias()[index];
+                                  }
+                                  return GestureDetector(
+                                    onTap: () async {
+                                      if (getCoincidencias().isNotEmpty) {
+                                        textEditingController.text =
+                                            coincidencia.nombre;
+                                        mostrarListaCoincidencias = false;
+                                        productoABuscar = coincidencia;
+                                        vista = '1';
+                                        loadSvgImagePrincipal(svgImg: svg);
+                                        List<ElementoDeSVG> elementos =
+                                            await getElementSVG(svg);
+                                        for (var elemento in elementos!) {
+                                          if (elemento.id ==
+                                              productoABuscar!.locacion) {
+                                            print('lo encontró');
+                                            onElementSelected(
+                                                elemento, false, false);
+                                          } else {
+                                            print('no lo encontro');
+                                          }
+                                        }
+                                        FocusManager.instance.primaryFocus
+                                            ?.unfocus();
+                                      } else {
+                                        mostrarListaCoincidencias = false;
+                                      }
+                                      setState(() {});
+                                    },
+                                    child: ListTile(
+                                      key: UniqueKey(),
+                                      leading: getCoincidencias().isNotEmpty
+                                          ? Image.network(
+                                              coincidencia.pathFoto,
+                                              height: 40,
+                                              width: 40,
+                                            )
+                                          : const SizedBox(),
+                                      title: Text(
+                                        getCoincidencias().isNotEmpty
+                                            ? coincidencia.nombre
+                                            : 'No hay coincidencias en el almacen',
+                                        style: greyTextStyle,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                          ),
+                        )
+                      : const SizedBox(),
+                ],
               ),
             )
-                : const SizedBox(),
-          ],
-        ),
-      )
           : const Center(
-        child: CircularProgressIndicator(),
-      ),
+              child: CircularProgressIndicator(color: kPrimaryColor,),
+            ),
     );
   }
 }

@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import '../background.dart';
 import '../constants.dart';
 import '../main.dart';
+import '../models/sucursal.dart';
 import 'home_screen.dart';
 
 late SharedPreferences loginData;
@@ -109,7 +110,23 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void openPage() {
+  void openPage() async{
+    List<Sucursal>? sucs= await getSucursalesFromJson();
+    if(sucursales==null){
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudieron cargar las sucursales'),
+          backgroundColor: Colors.red,
+          elevation: 10,
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }else{
+      sucursales=sucs!;
+      for(var s in sucursales){
+        print(s.nombre);
+      }
+    }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (context) => HomeScreen(userName: user),
@@ -216,6 +233,8 @@ class _LoginScreenState extends State<LoginScreen> {
             'password': passwordController.text,
           }));
       if (res.statusCode == 200) {
+        print('q tiene res');
+        print(res.body);
         final body = jsonDecode(res.body);
         loginData.setBool('login', false);
         loginData.setString('username', usernameController.text);

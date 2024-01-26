@@ -7,7 +7,7 @@ const Color kGreen = Color(0xffA5CFB7);
 const Color kPrimaryColorDark = Color(0xbf0054D1);
 const Color kSecondaryColor = Color(0xffEB746A);
 const Color kSecondaryColorDark = Color(0xffAB554D);
-String svg='assets/almacen3.svg';
+String svg='assets/almacen4.svg';
 Padding HomeIcon(icono){
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 15.0,horizontal: 20),

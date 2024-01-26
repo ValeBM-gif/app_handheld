@@ -4,9 +4,10 @@ import 'package:path_drawing/path_drawing.dart';
 class Clipper extends CustomClipper<Path> {
   Clipper({
     required this.svgPath,
+    required this.scale,
   });
 
-
+  double scale;
   String svgPath;
 
 
@@ -16,7 +17,7 @@ class Clipper extends CustomClipper<Path> {
     final Matrix4 matrix4 = Matrix4.identity();
 
 
-    matrix4.scale(.79, .79);
+    matrix4.scale(scale, scale);
 
 
     return path.transform(matrix4.storage).shift(const Offset(0, 0));
