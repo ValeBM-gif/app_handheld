@@ -240,14 +240,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
-  keyboard_visibility_pro:
-    dependency: "direct main"
-    description:
-      name: keyboard_visibility_pro
-      sha256: "337f7bf7d77aa41291d9cf922f388c61af545507afd2249f74f478419251f7b4"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.1"
   js:
     dependency: transitive
     description:
@@ -256,6 +248,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.0"
+  keyboard_visibility_pro:
+    dependency: "direct main"
+    description:
+      name: keyboard_visibility_pro
+      sha256: "337f7bf7d77aa41291d9cf922f388c61af545507afd2249f74f478419251f7b4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   lints:
     dependency: transitive
     description:

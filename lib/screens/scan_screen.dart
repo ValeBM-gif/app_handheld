@@ -44,6 +44,7 @@ class _ScanScreenState extends State<ScanScreen> {
         idSeccion: '',
         codigoBarras: '',
         locacion: '',
+        nivel: 1,
       ),
     );
 
