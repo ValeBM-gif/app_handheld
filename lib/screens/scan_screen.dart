@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants.dart';
+import '../models/locacion.dart';
 import '../models/producto.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -14,6 +15,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
   String result = '';
   Producto? foundProduct;
+  bool verificacionExitosa = true;
 
   @override
   void initState() {
