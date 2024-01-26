@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       child: Text('Selecciona la sucursal:', style: greyTextStyle.copyWith(fontSize: 16),),
                                     ),
                                     Container(
-                                      width: screenSize.width*.7,
+                                      width: screenSize.width * .7,
                                       decoration: BoxDecoration(
                                         color:
                                             Colors.grey.shade300.withAlpha(150),
@@ -165,16 +165,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Padding(
                                       padding: EdgeInsets.all(screenSize.width * .03),
                                       child: GestureDetector(
-                                        onTap: ()async{
+                                        onTap: () async {
                                           Navigator.pop(context);
                                           //todo: servicio para obtener productos dependiendo de la sucursal y almacen
                                           await Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) => ProductosScreen( sucursal: sucursales.firstWhere((sucursal) => sucursal.nombre==dropdownValue), tieneLayout: sucursales.firstWhere((sucursal) => sucursal.nombre==dropdownValue).tieneLayout,),
+                                              builder: (context) =>
+                                                  ProductosScreen(
+                                                sucursal: sucursales.firstWhere(
+                                                    (sucursal) =>
+                                                        sucursal.nombre ==
+                                                        dropdownValue),
+                                                tieneLayout: sucursales
+                                                    .firstWhere((sucursal) =>
+                                                        sucursal.nombre ==
+                                                        dropdownValue)
+                                                    .tieneLayout,
+                                              ),
                                             ),
                                           );
-                                          dropdownValue = sucursales.map((e) => e.nombre).first;
+                                          dropdownValue = sucursales
+                                              .map((e) => e.nombre)
+                                              .first;
                                         },
                                         child: Container(
                                           width: screenSize.width * .25,

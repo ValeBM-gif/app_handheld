@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:encrypt/encrypt.dart' as encrypt;
 
 import '../constants.dart';
 import '../models/locacion.dart';
@@ -10,21 +14,37 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  final TextEditingController _controller = TextEditingController();
+  TextEditingController codigoCifradoController = TextEditingController();
+  TextEditingController _controller = TextEditingController();
+  FocusNode ubicacionFocusNode = FocusNode();
   FocusNode _focusNode = FocusNode();
+  String claveCifrada = "Hola"; // Valor original hardcodeado
+  bool verificacionExitosa = true;
+  String valorVisible = "";
 
   String result = '';
   Producto? foundProduct;
-  bool verificacionExitosa = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ubicacionFocusNode.requestFocus();
+      // Abre el teclado automáticamente
+      FocusScope.of(context).requestFocus(ubicacionFocusNode);
+    });
     _controller.addListener(() {
       print("Lo que tiene el input es: ${_controller.text}");
     });
 
     _focusNode.requestFocus();
+  }
+
+  @override
+  void dispose() {
+    ubicacionFocusNode.dispose();
+    _controller.dispose();
+    super.dispose();
   }
 
   void searchProduct() {
@@ -102,17 +122,38 @@ class _ScanScreenState extends State<ScanScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      //controller: _controller,
-                      focusNode: _focusNode,
-                      onChanged: onTextChanged,
-                      autofocus: false,
-                      decoration: InputDecoration(
-                        hintText: 'Codigo de ubicacion',
-                        focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: kPrimaryColor),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: codigoCifradoController,
+                          focusNode: ubicacionFocusNode,
+                          onChanged: (value) {
+                            verificarCifradoAES(value);
+                          },
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Código de Ubicación",
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.cleaning_services),
+                              onPressed: () {
+                                setState(() {
+                                  codigoCifradoController.clear();
+                                  _controller.clear();
+                                  verificacionExitosa = true;
+                                  valorVisible = "";
+                                });
+                                _focusNode.requestFocus();
+                              },
+                            ),
+                          ),
                         ),
-                      ),
+                        if (!verificacionExitosa)
+                          Text(
+                            "Ubicacion Correcta",
+                            style:
+                                TextStyle(color: Colors.green, fontSize: 16.0),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -123,6 +164,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     child: TextField(
                       controller: _controller,
                       focusNode: _focusNode,
+                      enabled: !verificacionExitosa,
                       onChanged: onTextChanged,
                       autofocus: false,
                       decoration: InputDecoration(
@@ -190,6 +232,63 @@ class _ScanScreenState extends State<ScanScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void verificarCifradoAES(String valorCifrado) {
+    // Clave utilizada para el cifrado AES
+    String claveAES = "y80Ib8dG48SsHqU6";
+
+    // Decodificar la cadena Base64
+    String cleanedBase64 = valorCifrado.trim();
+    cleanedBase64 =
+        cleanedBase64.replaceAll(' ', '+'); // Reemplazar espacios con '+'
+
+    try {
+      // Decodificar la cadena Base64
+      Uint8List encryptedBytes = base64.decode(cleanedBase64);
+
+      final key = encrypt.Key.fromUtf8(claveAES);
+      final encrypter =
+          encrypt.Encrypter(encrypt.AES(key, mode: encrypt.AESMode.ecb));
+
+      // Desencriptar usando AES
+      String resultadoDesencriptado;
+
+      resultadoDesencriptado =
+          encrypter.decrypt64(cleanedBase64, iv: encrypt.IV.fromUtf8(''));
+
+      print('Resultado: $resultadoDesencriptado');
+
+      // Comparar con el valor original
+      if (resultadoDesencriptado == claveCifrada) {
+        setState(() {
+          verificacionExitosa = false;
+          ubicacionFocusNode.unfocus();
+          Future.delayed(Duration(milliseconds: 100), () {
+            // Espera 100 milisegundos antes de solicitar el foco en el segundo TextField
+            _focusNode.requestFocus();
+          });
+          codigoCifradoController.text = resultadoDesencriptado;
+        });
+      } else {
+        setState(() {
+          verificacionExitosa = true;
+        });
+        mostrarMensaje("Ubicacion Incorrecta");
+      }
+    } catch (e) {
+      print('Error durante la desencriptación: $e');
+      mostrarMensaje("Error durante la desencriptación");
+    }
+  }
+
+  void mostrarMensaje(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(mensaje),
+        duration: Duration(seconds: 3),
       ),
     );
   }
