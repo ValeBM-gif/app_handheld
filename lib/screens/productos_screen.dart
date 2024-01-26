@@ -106,7 +106,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
                       setState(() {});
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                      padding: EdgeInsets.symmetric(horizontal: 18),
                       child: ListTile(
                         trailing: Text(
                           producto.cantidadStock.toString(),

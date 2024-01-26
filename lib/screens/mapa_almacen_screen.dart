@@ -41,6 +41,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
   bool mostrarListaCoincidencias = false;
   bool mapaCargado = false;
   bool mostrarDetalleBahia = false;
+
   String vista = "2";
   //vista 1: rack
   //vista 2: bahía
@@ -170,7 +171,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
       clipper: clipper,
       child: GestureDetector(
         onTap: () => element != null
-            ? onElementSelected(element, abrirPanel, tapEnDetalle)
+            ? onElementSelected(element, abrirPanel, tapEnDetalle, false)
             : () {
                 print('element nulo');
               },
@@ -182,40 +183,55 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
   }
 
   Future<void> onElementSelected(ElementoDeSVG svgElement,
-      bool tapEnMapaPrincipal, bool tapEnMapaDetalle) async {
-    if (!mostrarDetalleBahia) {
-      for (var e in elementosDeSVGPrincipal!) {
-        e.resaltado = false;
-        objetoSeleccionado = null;
-        // rackResaltado=null;
-        // bahiasResaltadas=[];
-      }
-      if (svgElement.tipoElemento == '2') {
-        if (rackResaltado == null || svgElement.id != ultimoRackResaltado?.id) {
-          objetoSeleccionado =
-              racks.firstWhere((rack) => rack.id == svgElement.id);
-          elementosDeSVGPrincipal
-              ?.firstWhere((element) => element.id == svgElement.id)
-              .resaltado = true;
-          rackResaltado =
-              elementosDeSVGPrincipal?.firstWhere((c) => c.id == svgElement.id);
-          ultimoRackResaltado = rackResaltado;
-        } else {
+      bool tapEnMapaPrincipal, bool tapEnMapaDetalle, bool seleccionDeCoincidencia) async {
+    if(!seleccionDeCoincidencia){
+      if (!mostrarDetalleBahia) {
+        for (var e in elementosDeSVGPrincipal!) {
+          e.resaltado = false;
           objetoSeleccionado = null;
-          elementosDeSVGPrincipal
-              ?.firstWhere((element) => element.id == svgElement.id)
-              .resaltado = false;
-          rackResaltado = null;
         }
-      } else if (svgElement.tipoElemento == '1') {
-        if (ultimasBahiasResaltadas.length <= 1) {
-          if (ultimasBahiasResaltadas.length == 1) {
-            if (ultimasBahiasResaltadas[0].id == svgElement.id) {
-              objetoSeleccionado = null;
-              elementosDeSVGPrincipal
-                  ?.firstWhere((element) => element.id == svgElement.id)
-                  .resaltado = false;
-              bahiasResaltadas.clear();
+        if (svgElement.tipoElemento == '2') {
+          if (rackResaltado == null || svgElement.id != ultimoRackResaltado?.id) {
+            objetoSeleccionado =
+                racks.firstWhere((rack) => rack.id == svgElement.id);
+            elementosDeSVGPrincipal
+                ?.firstWhere((element) => element.id == svgElement.id)
+                .resaltado = true;
+            rackResaltado =
+                elementosDeSVGPrincipal?.firstWhere((c) => c.id == svgElement.id);
+            ultimoRackResaltado = rackResaltado;
+          } else {
+            objetoSeleccionado = null;
+            elementosDeSVGPrincipal
+                ?.firstWhere((element) => element.id == svgElement.id)
+                .resaltado = false;
+            rackResaltado = null;
+          }
+        } else if (svgElement.tipoElemento == '1') {
+          if (ultimasBahiasResaltadas.length <= 1) {
+            if (ultimasBahiasResaltadas.length == 1) {
+              if (ultimasBahiasResaltadas[0].id == svgElement.id) {
+                objetoSeleccionado = null;
+                elementosDeSVGPrincipal
+                    ?.firstWhere((element) => element.id == svgElement.id)
+                    .resaltado = false;
+                bahiasResaltadas.clear();
+              } else {
+                bahiasResaltadas.clear();
+                for (var rack in racks) {
+                  for (var bahia in rack.bahias) {
+                    if (bahia.id == svgElement.id) {
+                      objetoSeleccionado = bahia;
+                      elementosDeSVGPrincipal
+                          ?.firstWhere((element) => element.id == svgElement.id)
+                          .resaltado = true;
+                      bahiasResaltadas.add(elementosDeSVGPrincipal!
+                          .firstWhere((element) => element.id == svgElement.id));
+                      ultimasBahiasResaltadas = bahiasResaltadas;
+                    }
+                  }
+                }
+              }
             } else {
               bahiasResaltadas.clear();
               for (var rack in racks) {
@@ -232,7 +248,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                 }
               }
             }
-          } else {
+          } else if (ultimasBahiasResaltadas.length > 1) {
             bahiasResaltadas.clear();
             for (var rack in racks) {
               for (var bahia in rack.bahias) {
@@ -243,65 +259,69 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                       .resaltado = true;
                   bahiasResaltadas.add(elementosDeSVGPrincipal!
                       .firstWhere((element) => element.id == svgElement.id));
-                  ultimasBahiasResaltadas = bahiasResaltadas;
                 }
               }
             }
+            ultimasBahiasResaltadas = bahiasResaltadas;
           }
-        } else if (ultimasBahiasResaltadas.length > 1) {
+        } else if (svgElement.tipoElemento == '3') {
           bahiasResaltadas.clear();
+          vista = '1';
+          await loadSvgImagePrincipal(svgImg: svg);
           for (var rack in racks) {
             for (var bahia in rack.bahias) {
-              if (bahia.id == svgElement.id) {
-                objetoSeleccionado = bahia;
+              if (bahia.pasilloId == svgElement.id) {
+                print('coincide');
+                objetoSeleccionado = null;
+                print(elementosDeSVGPrincipal?.length);
                 elementosDeSVGPrincipal
-                    ?.firstWhere((element) => element.id == svgElement.id)
+                    ?.firstWhere((element) => element.id == bahia.id)
                     .resaltado = true;
                 bahiasResaltadas.add(elementosDeSVGPrincipal!
-                    .firstWhere((element) => element.id == svgElement.id));
+                    .firstWhere((element) => element.id == bahia.id));
+              } else {
+                print('no coincide');
               }
             }
           }
           ultimasBahiasResaltadas = bahiasResaltadas;
         }
-      } else if (svgElement.tipoElemento == '3') {
+        if (objetoSeleccionado != null) {
+          getProductosAMostrar(objetoSeleccionado);
+          if (tapEnMapaPrincipal) {
+            panelController.open();
+          }
+        }
+      } else {
+        if (!tapEnMapaDetalle) {
+          for (var e in elementosDeSVGDetalle!) {
+            e.resaltado = false;
+            print(e.id);
+          }
+          print('print ${svgElement.id}');
+          elementosDeSVGDetalle
+              ?.firstWhere((element) => element.id == svgElement.id)
+              .resaltado = true;
+        }
+      }
+    }else{
+      for (var e in elementosDeSVGPrincipal!) {
+        e.resaltado = false;
+        objetoSeleccionado = null;
         bahiasResaltadas.clear();
-        vista = '1';
-        await loadSvgImagePrincipal(svgImg: svg);
         for (var rack in racks) {
           for (var bahia in rack.bahias) {
-            if (bahia.pasilloId == svgElement.id) {
-              print('coincide');
-              objetoSeleccionado = null;
-              print(elementosDeSVGPrincipal?.length);
+            if (bahia.id == svgElement.id) {
+              objetoSeleccionado = bahia;
               elementosDeSVGPrincipal
-                  ?.firstWhere((element) => element.id == bahia.id)
+                  ?.firstWhere((element) => element.id == svgElement.id)
                   .resaltado = true;
               bahiasResaltadas.add(elementosDeSVGPrincipal!
-                  .firstWhere((element) => element.id == bahia.id));
-            } else {
-              print('no coincide');
+                  .firstWhere((element) => element.id == svgElement.id));
+              ultimasBahiasResaltadas = bahiasResaltadas;
             }
           }
         }
-        ultimasBahiasResaltadas = bahiasResaltadas;
-      }
-      if (objetoSeleccionado != null) {
-        getProductosAMostrar(objetoSeleccionado);
-        if (tapEnMapaPrincipal) {
-          panelController.open();
-        }
-      }
-    } else {
-      if (!tapEnMapaDetalle) {
-        for (var e in elementosDeSVGDetalle!) {
-          e.resaltado = false;
-          print(e.id);
-        }
-        print('print ${svgElement.id}');
-        elementosDeSVGDetalle
-            ?.firstWhere((element) => element.id == svgElement.id)
-            .resaltado = true;
       }
     }
 
@@ -431,7 +451,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                     ),
                   ),
                   vista == '1'
-                      ? GestureDetector(
+                      ?productosAMostrar.isNotEmpty? GestureDetector(
                           onTap: () {
                             mostrarDetalleBahia = !mostrarDetalleBahia;
                             setState(() {});
@@ -440,7 +460,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                               ? Icons.arrow_drop_down
                               : Icons.arrow_drop_up),
                         )
-                      : const SizedBox(),
+                      : const SizedBox(): const SizedBox(),
                   mostrarDetalleBahia
                       ? Center(
                           child: Padding(
@@ -485,37 +505,61 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                           separatorBuilder: (context, index) {
                             return const Divider();
                           },
-                          itemCount: productosAMostrar.length,
+                          itemCount:productosAMostrar.isNotEmpty? productosAMostrar.length:1,
                           itemBuilder: (context, index) {
-                            Producto producto = productosAMostrar[index];
+                            var producto;
+                            if(productosAMostrar.isNotEmpty){
+                               producto =productosAMostrar[index];
+                            }
+
                             return Container(
                               color: Colors.transparent,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 18.0),
                                 child: GestureDetector(
-                                  onTap: () {
-                                    mostrarDetalleBahia = true;
-                                    for (var e in elementosDeSVGDetalle!) {
-                                      if (e.id == '0${producto.nivel}') {
-                                        onElementSelected(e, false, false);
+                                  onTap: () async {
+                                    if(productosAMostrar.isNotEmpty){
+                                      if(vista=='1'){
+                                        mostrarDetalleBahia = true;
+                                        for (var e in elementosDeSVGDetalle!) {
+                                          if (e.id == '0${producto.nivel}') {
+                                            onElementSelected(e, false, false, false);
+                                          }
+                                        }
+                                      }else{
+                                        panelController.close();
+                                        vista='1';
+                                        loadSvgImagePrincipal(svgImg: svg);
+                                        List<ElementoDeSVG> elementos =
+                                            await getElementSVG(svg);
+                                        for (var elemento in elementos!) {
+                                          if (elemento.id ==
+                                              producto.locacion) {
+                                            print('lo encontró');
+                                            onElementSelected(
+                                                elemento, false, false, true);
+                                          } else {
+                                            print('no lo encontro');
+                                          }
+                                        }
                                       }
                                     }
                                     setState(() {});
                                   },
                                   child: ListTile(
                                     key: UniqueKey(),
-                                    leading: Image.network(
+                                    leading:productosAMostrar.isNotEmpty? Image.network(
                                       producto.pathFoto,
                                       height: 40,
                                       width: 40,
-                                    ),
-                                    title: Text(
-                                      producto.nombre,
+                                    ):const SizedBox(),
+                                    title: Text(productosAMostrar.isNotEmpty?
+                                      producto.nombre:'No hay productos en esta ubicación',
                                       style: greyTextStyle,
                                     ),
-                                    subtitle: Text(
-                                      'Locación: ${producto.locacion ?? 'no asignada'}',
+                                    subtitle: Text(productosAMostrar.isNotEmpty?
+                                      'Locación: ${producto.locacion ?? 'no asignada'}':'',
                                       style:
                                           greyTextStyle.copyWith(fontSize: 12),
                                     ),
@@ -532,11 +576,11 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                 children: [
                   Column(
                     children: [
-                      const SizedBox(
-                        height: 6,
+                       SizedBox(
+                        height: screenSize.height*.007,
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: EdgeInsets.all(screenSize.width * .022),
                         child: TextFormField(
                           cursorColor: kPrimaryColor,
                           decoration: InputDecoration(
@@ -557,7 +601,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                               },
                             ),
                             contentPadding:
-                                const EdgeInsets.only(left: 9, right: 9),
+                                 EdgeInsets.symmetric(horizontal: screenSize.width * .022),
                             labelText: 'Búsqueda de productos',
                             labelStyle: const TextStyle(color: Colors.black26),
                             filled: true,
@@ -587,11 +631,11 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 18.0),
+                        padding:  EdgeInsets.only(top: screenSize.width * .03),
                         child: Text(
                           'Sección: ${objetoSeleccionado != null ? objetoSeleccionado.id : ''}',
                           style: greyTextStyle.copyWith(
-                              fontWeight: FontWeight.w900, fontSize: 16),
+                              fontWeight: FontWeight.w900, fontSize: 18),
                         ),
                       ),
                       Center(
@@ -635,8 +679,9 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                 setState(() {});
                               },
                               child: Container(
-                                width: 85,
+                                width: screenSize.width * .4,
                                 decoration: BoxDecoration(
+                                  border: Border.all(color:vista == '2'?kPrimaryColor: Colors.black26, width: 2, strokeAlign: BorderSide.strokeAlignInside),
                                   color: vista == '2'
                                       ? kPrimaryColor
                                       : Colors.transparent,
@@ -645,18 +690,19 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: EdgeInsets.all(screenSize.width * .022),
                                   child: Center(
                                       child: Text(
                                     'Racks',
                                     style: vista == '2'
                                         ? greyTextStyle.copyWith(
-                                            color: Colors.white, fontSize: 12)
-                                        : greyTextStyle.copyWith(fontSize: 12),
+                                            color: Colors.white, fontSize: 16)
+                                        : greyTextStyle.copyWith(fontSize: 16),
                                   )),
                                 ),
                               ),
                             ),
+                             SizedBox(width: screenSize.width*.01,),
                             GestureDetector(
                               onTap: () {
                                 vista = '1';
@@ -664,8 +710,9 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                 setState(() {});
                               },
                               child: Container(
-                                width: 85,
+                                width: screenSize.width * .4,
                                 decoration: BoxDecoration(
+                                  border: Border.all(color:vista == '1'?kPrimaryColor: Colors.black26, width: 2, strokeAlign: BorderSide.strokeAlignInside),
                                   color: vista == '1'
                                       ? kPrimaryColor
                                       : Colors.transparent,
@@ -674,14 +721,14 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                   ),
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: EdgeInsets.all(screenSize.width * .022),
                                   child: Center(
                                       child: Text(
                                     'Bahías',
                                     style: vista == '1'
                                         ? greyTextStyle.copyWith(
-                                            color: Colors.white, fontSize: 12)
-                                        : greyTextStyle.copyWith(fontSize: 12),
+                                            color: Colors.white, fontSize: 16)
+                                        : greyTextStyle.copyWith(fontSize: 16),
                                   )),
                                 ),
                               ),
@@ -761,7 +808,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                               productoABuscar!.locacion) {
                                             print('lo encontró');
                                             onElementSelected(
-                                                elemento, false, false);
+                                                elemento, false, false, true);
                                           } else {
                                             print('no lo encontro');
                                           }

@@ -134,11 +134,12 @@ class _SeleccionarLocacionScreenState extends State<SeleccionarLocacionScreen> {
 
   Future<void> onElementSelected(
       ElementoDeSVG svgElement) async {
-    for (var e in elementosDeSVG!) {
-      e.resaltado = false;
-      bahiaSeleccionada = null;
-    }
+
     if (svgElement.tipoElemento == '1') {
+      for (var e in elementosDeSVG!) {
+        e.resaltado = false;
+        bahiaSeleccionada = null;
+      }
       if(ultimaBahiaSeleccionada != null){
         if (ultimaBahiaSeleccionada!.id == svgElement.id) {
           bahiaSeleccionada = null;

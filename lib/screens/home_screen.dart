@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (context) {
                           return Center(
                             child: Container(
-                              height: screenSize.height * .2,
+                              height: screenSize.height * .3,
                               width: screenSize.width * .85,
                               decoration: BoxDecoration(
                                 color:
@@ -123,8 +123,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text('Selecciona la sucursal:', style: greyTextStyle,),
+                                      padding: EdgeInsets.all(screenSize.width * .03),
+                                      child: Text('Selecciona la sucursal:', style: greyTextStyle.copyWith(fontSize: 16),),
                                     ),
                                     Container(
                                       width: screenSize.width*.7,
@@ -137,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       child: Center(
                                         child: Padding(
-                                          padding: const EdgeInsets.only(left: 18.0),
+                                          padding: EdgeInsets.only(left: screenSize.width * .03),
                                           child: DropdownMenu<String>(
                                             initialSelection: sucursales
                                                 .map((s) => s.nombre)
@@ -163,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: EdgeInsets.all(screenSize.width * .03),
                                       child: GestureDetector(
                                         onTap: ()async{
                                           Navigator.pop(context);
@@ -177,20 +177,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                           dropdownValue = sucursales.map((e) => e.nombre).first;
                                         },
                                         child: Container(
-                                          width: 85,
+                                          width: screenSize.width * .25,
                                           decoration: const BoxDecoration(
                                             color: kPrimaryColor,
                                             borderRadius: BorderRadius.all(
-                                              Radius.circular(12),
+                                              Radius.circular(13),
                                             ),
                                           ),
                                           child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
+                                            padding: EdgeInsets.symmetric(horizontal: screenSize.width * .03, vertical: screenSize.width * .03),
                                             child: Center(
                                               child: Text(
                                                 'Continuar',
                                                 style: greyTextStyle.copyWith(
-                                                    color: Colors.white, fontSize:12),
+                                                    color: Colors.white, fontSize:16),
                                               ),
                                             ),
                                           ),
