@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants.dart';
+import 'capturaCompleta_screen.dart';
 import 'login_screen.dart';
 import 'mapa_almacen_screen.dart';
 
@@ -69,11 +70,50 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ScanScreen(),
-                      ),
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(
+                            'Seleccione una opción:',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ScanScreen(),
+                                    ),
+                                  ).then((value) {
+                                    Navigator.pop(
+                                        context); // Cierra el diálogo al regresar
+                                  });
+                                },
+                                child: Text('Rápida'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          CapturaCompletaScreen(),
+                                    ),
+                                  ).then((value) {
+                                    Navigator.pop(
+                                        context); // Cierra el diálogo al regresar
+                                  });
+                                },
+                                child: Text('Completa'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     );
                   },
                   child: SizedBox(
@@ -123,8 +163,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Padding(
-                                      padding: EdgeInsets.all(screenSize.width * .03),
-                                      child: Text('Selecciona la sucursal:', style: greyTextStyle.copyWith(fontSize: 16),),
+                                      padding: EdgeInsets.all(
+                                          screenSize.width * .03),
+                                      child: Text(
+                                        'Selecciona la sucursal:',
+                                        style: greyTextStyle.copyWith(
+                                            fontSize: 16),
+                                      ),
                                     ),
                                     Container(
                                       width: screenSize.width * .7,
@@ -137,7 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                       child: Center(
                                         child: Padding(
-                                          padding: EdgeInsets.only(left: screenSize.width * .03),
+                                          padding: EdgeInsets.only(
+                                              left: screenSize.width * .03),
                                           child: DropdownMenu<String>(
                                             initialSelection: sucursales
                                                 .map((s) => s.nombre)
@@ -163,7 +209,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.all(screenSize.width * .03),
+                                      padding: EdgeInsets.all(
+                                          screenSize.width * .03),
                                       child: GestureDetector(
                                         onTap: () async {
                                           Navigator.pop(context);
@@ -198,12 +245,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ),
                                           child: Padding(
-                                            padding: EdgeInsets.symmetric(horizontal: screenSize.width * .03, vertical: screenSize.width * .03),
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal:
+                                                    screenSize.width * .03,
+                                                vertical:
+                                                    screenSize.width * .03),
                                             child: Center(
                                               child: Text(
                                                 'Continuar',
                                                 style: greyTextStyle.copyWith(
-                                                    color: Colors.white, fontSize:16),
+                                                    color: Colors.white,
+                                                    fontSize: 16),
                                               ),
                                             ),
                                           ),

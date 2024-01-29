@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
 
 import '../constants.dart';
+import '../main.dart';
 import '../models/locacion.dart';
 import '../models/producto.dart';
 
@@ -21,6 +22,10 @@ class _ScanScreenState extends State<ScanScreen> {
   String claveCifrada = "Hola"; // Valor original hardcodeado
   bool verificacionExitosa = true;
   String valorVisible = "";
+  List<String> nombresSucursales =
+      sucursales.map((sucursal) => sucursal.nombre).toList();
+  String selectedLocation = '';
+  String selectedProduct = '';
 
   String result = '';
   Producto? foundProduct;
@@ -124,6 +129,24 @@ class _ScanScreenState extends State<ScanScreen> {
                   Expanded(
                     child: Column(
                       children: [
+                        DropdownButton<String>(
+                          value: selectedLocation.isNotEmpty
+                              ? selectedLocation
+                              : nombresSucursales.first,
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              selectedLocation = newValue!;
+                            });
+                          },
+                          items: nombresSucursales
+                              .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          hint: Text('Selecciona una ubicación'),
+                        ),
                         TextField(
                           controller: codigoCifradoController,
                           focusNode: ubicacionFocusNode,
@@ -279,8 +302,8 @@ class _ScanScreenState extends State<ScanScreen> {
         mostrarMensaje("Ubicacion Incorrecta");
       }
     } catch (e) {
-      print('Error durante la desencriptación: $e');
-      mostrarMensaje("Error durante la desencriptación");
+      print('Ubicacion Incorrecta: $e');
+      mostrarMensaje("Ubicacion Incorrecta");
     }
   }
 
@@ -288,6 +311,7 @@ class _ScanScreenState extends State<ScanScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(mensaje),
+        backgroundColor: Colors.red,
         duration: Duration(seconds: 3),
       ),
     );
