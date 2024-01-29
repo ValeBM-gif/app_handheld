@@ -45,7 +45,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
           ),
         ),
         actions: [
-          widget.tieneLayout?Padding(
+          false?Padding(
             padding: const EdgeInsets.only(right: 28.0),
             child: GestureDetector(
               onTap: () {
@@ -106,7 +106,7 @@ class _ProductosScreenState extends State<ProductosScreen> {
                       setState(() {});
                     },
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 18),
+                      padding: EdgeInsets.symmetric(horizontal: screenSize.width*.044),
                       child: ListTile(
                         trailing: Text(
                           producto.cantidadStock.toString(),
@@ -115,15 +115,15 @@ class _ProductosScreenState extends State<ProductosScreen> {
                         key: UniqueKey(),
                         leading: Image.network(
                           producto.pathFoto,
-                          height: 40,
-                          width: 40,
+                          height: screenSize.width*.098,
+                          width: screenSize.width*.098,
                         ),
                         title: Text(
                           producto.nombre,
                           style: greyTextStyle,
                         ),
-                        subtitle:widget.tieneLayout? Text(
-                          'Locación: ${producto.locacion??'no asignada'}',
+                        subtitle:widget.tieneLayout? Text(producto.locacion!=null?
+                          'Locación: ${producto.locacion}-0${producto.nivel}-01':'Locación no asignada',
                           style: greyTextStyle.copyWith(fontSize: 12),
                         ):Text(
                           'Detalles idk',

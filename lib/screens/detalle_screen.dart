@@ -104,18 +104,18 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
             children: [!tecladoEsVisible?
               Image.network(
                 widget.producto.pathFoto,
-                height: 150,
-                width: 150,
+                height: screenSize.width*.366,
+                width: screenSize.width*.366,
               ):const SizedBox(),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(screenSize.width*.02),
                 child: Text(
                   'Detalles: shalalala shalalala',
                   style: greyTextStyle,
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: EdgeInsets.all(screenSize.width*.02),
                 child: Text(
                   'Cantidad: 32',
                   style: greyTextStyle,
@@ -125,8 +125,8 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                 padding: EdgeInsets.only(
                     left: screenSize.width * .3,
                     right: screenSize.width * .3,
-                    top: 8,
-                    bottom: 8),
+                    top: screenSize.width*.02,
+                    bottom: screenSize.width*.02),
                 child: widget.mostrarDatosLocacion?Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -139,8 +139,8 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                       selectedTextStyle: greyTextStyle.copyWith(
                           color: kPrimaryColor, fontSize: 22),
                       textStyle: greyTextStyle,
-                      itemHeight: 25,
-                      itemWidth: 25,
+                      itemHeight: screenSize.width*.06,
+                      itemWidth: screenSize.width*.06,
                       zeroPad: true,
                       axis: Axis.horizontal,
                       value: nivel,
@@ -159,9 +159,9 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: EdgeInsets.all(screenSize.width*.02),
                     child: Text(
-                      'Locación: ${widget.producto.locacion}',
+                      'Locación: ${widget.producto.locacion}-0$nivel-01',
                       style: greyTextStyle,
                     ),
                   ),
@@ -186,7 +186,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                         SizedBox(
                           width: screenSize.width * .7,
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
+                            padding: EdgeInsets.only(top: screenSize.width*.02),
                             child: TextFormField(
                               cursorColor: kPrimaryColor,
                               decoration: InputDecoration(
@@ -208,7 +208,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                                   },
                                 ),
                                 contentPadding:
-                                    const EdgeInsets.only(left: 9, right: 9),
+                                     EdgeInsets.symmetric(horizontal: screenSize.width*.02),
                                 labelText: 'Ingrese una locación',
                                 labelStyle:
                                     const TextStyle(color: Colors.black26),
@@ -221,8 +221,8 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                                   borderSide: BorderSide.none,
                                 ),
                               ),
-                              style: const TextStyle(
-                                fontSize: 18,
+                              style: TextStyle(
+                                fontSize: screenSize.width*.044,
                                 color: Colors.black,
                                 //fontWeight: FontWeight.bold,
                               ),
@@ -232,6 +232,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                                 if (val == null || val == '') {
                                   mostrarListaLocaciones = false;
                                 } else {
+                                  print('entraaa');
                                     mostrarListaLocaciones = true;
 
                                 }
@@ -241,7 +242,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                           ),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(left: 8.0, top: 5),
+                          padding: EdgeInsets.only(left: screenSize.width*.02, top: screenSize.width*.012),
                           child: GestureDetector(
                             onTap: () async {
                               var locacion = await Navigator.push(
@@ -256,25 +257,25 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                               textEditingController.text = locacion ?? '';
                             },
                             child: Container(
-                              width: 40,
-                              height: 40,
+                              width: screenSize.width*.11,
+                              height: screenSize.width*.11,
                               decoration: BoxDecoration(
                                 color: Colors.transparent,
                                 border: Border.all(
                                     color: kPrimaryColor,
-                                    width: 3,
+                                    width: screenSize.width*.007,
                                     strokeAlign: BorderSide.strokeAlignInside),
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(12),
                                 ),
                               ),
-                              child: const Padding(
-                                padding: EdgeInsets.all(8.0),
+                              child: Padding(
+                                padding: EdgeInsets.all(screenSize.width*.02),
                                 child: Center(
                                   child: Icon(
                                     Icons.map,
                                     color: kPrimaryColor,
-                                    size: 20,
+                                    size: screenSize.width*.048,
                                   ),
                                   // Text(
                                   //   'Ver productos disponibles',
@@ -291,7 +292,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                   : const SizedBox(),
               mostrarListaLocaciones
                   ? Container(
-                      height: 150,
+                      height: screenSize.width*.37,
                       color: Theme.of(context).scaffoldBackgroundColor,
                       child: ListView.builder(
                           itemCount:getCoincidencias(locacionesBahiasExistentes).isNotEmpty
@@ -321,16 +322,16 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Padding(
-                                      padding: const EdgeInsets.only(left: 28.0),
+                                      padding:  EdgeInsets.only(left: screenSize.width*.068),
                                       child: Padding(
-                                        padding: const EdgeInsets.only(bottom: 15.0),
+                                        padding: EdgeInsets.only(bottom: screenSize.width*.036),
                                         child: Text(getCoincidencias(locacionesBahiasExistentes).isNotEmpty?
                                           coincidencia:'Locación no encontrada',
                                           style: greyTextStyle,
                                         ),
                                       ),
                                     ),
-                                    Container(color: Colors.grey, height: .5,)
+                                    Container(color: Colors.grey, height: .001,)
                                   ],
                                 ),
                               ),
@@ -340,9 +341,10 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                   : const SizedBox(),
               mostrarEditorDeLocacion
                   ? Padding(
-                      padding: EdgeInsets.all(8.0),
+                      padding: EdgeInsets.all(screenSize.width*.02),
                       child: GestureDetector(
                         onTap: () {
+                          mostrarListaLocaciones=false;
                           FocusManager.instance.primaryFocus?.unfocus();
                           var locacionExiste = false;
                           for (var l in locacionesBahiasExistentes) {
@@ -373,7 +375,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                           setState(() {});
                         },
                         child: Container(
-                          width: 85,
+                          width: screenSize.width * .25,
                           decoration: BoxDecoration(
                             color: tecladoEsVisible?Colors.transparent:kPrimaryColor,
                             borderRadius: const BorderRadius.all(
@@ -381,12 +383,12 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                             ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: EdgeInsets.all(screenSize.width*.02),
                             child: Center(
                               child: Text(
                                 'Guardar',
                                 style: greyTextStyle.copyWith(
-                                    color: Colors.white, fontSize: tecladoEsVisible?0:12),
+                                    color: Colors.white, fontSize: tecladoEsVisible?0:16),
                               ),
                             ),
                           ),

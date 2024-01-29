@@ -20,6 +20,8 @@ class MapaAlmacenScreen extends StatefulWidget {
 }
 
 class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
+  int? selectedIndex;
+
   List<ElementoDeSVG>? elementosDeSVGPrincipal = [];
   List<ElementoDeSVG>? elementosDeSVGDetalle = [];
 
@@ -406,6 +408,7 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
           ? SlidingUpPanel(
               onPanelClosed: () {
                 mostrarDetalleBahia = false;
+                selectedIndex=null;
               },
               backdropOpacity: 0.28,
               backdropEnabled: true,
@@ -414,8 +417,8 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                 topLeft: Radius.circular(24.0),
                 topRight: Radius.circular(24.0),
               ),
-              snapPoint: .8,
-              maxHeight: screenSize.height * .4,
+              snapPoint: .84,
+              maxHeight: screenSize.height * .52,
               minHeight: screenSize.height * 0,
               controller: panelController,
               color: Theme.of(context).canvasColor,
@@ -436,9 +439,9 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                           topRight: Radius.circular(20),
                         ),
                       ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(screenSize.width*.02),
+                        child: const Center(
                           child: Text(
                             '',
                             style: TextStyle(
@@ -497,14 +500,12 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                       : const SizedBox(),
                   SizedBox(
                     height: mostrarDetalleBahia
-                        ? screenSize.height * .195
-                        : screenSize.height * .3305,
+                        ? screenSize.height * .29
+                        : vista=='2'?screenSize.height * .48:screenSize.height * .43,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListView.separated(
-                          separatorBuilder: (context, index) {
-                            return const Divider();
-                          },
+                      child: ListView.builder(
+
                           itemCount:productosAMostrar.isNotEmpty? productosAMostrar.length:1,
                           itemBuilder: (context, index) {
                             var producto;
@@ -513,12 +514,14 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                             }
 
                             return Container(
-                              color: Colors.transparent,
+                              color: selectedIndex==index?Colors.black12:Colors.transparent,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 18.0),
                                 child: GestureDetector(
                                   onTap: () async {
+
+
                                     if(productosAMostrar.isNotEmpty){
                                       if(vista=='1'){
                                         mostrarDetalleBahia = true;
@@ -526,6 +529,14 @@ class _MapaAlmacenScreenState extends State<MapaAlmacenScreen> {
                                           if (e.id == '0${producto.nivel}') {
                                             onElementSelected(e, false, false, false);
                                           }
+                                        }
+                                        if(index==selectedIndex){
+                                          selectedIndex=null;
+                                          for (var e in elementosDeSVGDetalle!) {
+                                            e.resaltado = false;
+                                          }
+                                        }else{
+                                          selectedIndex=index;
                                         }
                                       }else{
                                         panelController.close();
